@@ -9,6 +9,9 @@ public class SimpleTweaks extends JavaPlugin {
     public void onEnable() {
         registerEvents();
         startTabber();
+
+        if(Bukkit.getPluginManager().isPluginEnabled("ProtocolLib"))
+            new SpecHideTabber(this);
     }
 
     private void registerEvents() {
