@@ -10,9 +10,11 @@ import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.comphenix.protocol.wrappers.WrappedServerPing;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class SpecHideTabber implements PacketListener {
@@ -30,9 +32,18 @@ public class SpecHideTabber implements PacketListener {
         WrapperStatusServerServerInfo info = new WrapperStatusServerServerInfo(packetEvent.getPacket());
         WrappedServerPing status = info.getStatus();
         List<WrappedGameProfile> players = new ArrayList<>(status.getPlayers());
-        players.removeIf(profile -> Bukkit.getPlayer(profile.getUUID()).getGameMode() == GameMode.SPECTATOR);
+        Iterator<WrappedGameProfile> iterator = players.iterator();
+        while (iterator.hasNext()) {
+            WrappedGameProfile profile = iterator.next();
+            Player player = Bukkit.getPlayer(profile.getUUID());
+            if (player == null)
+                continue;
+            if (player.getGameMode() == GameMode.SPECTATOR)
+                iterator.remove();
+        }
         status.setPlayers(players);
         status.setPlayersOnline(players.size());
+        status.setPlayersMaximum(players.size() + 1);
         info.setStatus(status);
         packetEvent.setPacket(info.getHandle());
     }
