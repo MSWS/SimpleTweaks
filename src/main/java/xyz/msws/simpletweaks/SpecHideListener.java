@@ -2,32 +2,37 @@ package xyz.msws.simpletweaks;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
-import org.bukkit.event.server.ServerListPingEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
-public class SpecHideListener implements Listener {
+public class SpecHideListener implements Listener, PlayerHider {
     private final Plugin plugin;
 
     public SpecHideListener(Plugin plugin) {
         this.plugin = plugin;
-
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            updateVisibility();
-        }, 0, 20);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onGamemode(PlayerGameModeChangeEvent event) {
-        updateVisibility(event.getPlayer());
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                updateVisibility(event.getPlayer());
+            }
+        }.runTaskLater(plugin, 1);
     }
 
-    @EventHandler
-    public void onPing(ServerListPingEvent event) {
-
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        updateVisibility(player);
     }
 
     public void updateVisibility() {
@@ -37,23 +42,23 @@ public class SpecHideListener implements Listener {
 
     public void updateVisibility(Player player) {
         for (Player p : plugin.getServer().getOnlinePlayers())
-            if (p != player)
-                updateVisibility(player, p);
+            if (p != player) updateVisibility(player, p);
+        player.setSleepingIgnored(hidePlayer(player));
     }
 
     public void updateVisibility(Player a, Player b) {
-        if (a.getGameMode() == b.getGameMode()) {
+        if (hidePlayer(a) == hidePlayer(b)) {
             a.showPlayer(plugin, b);
             b.showPlayer(plugin, a);
             return;
         }
-        if (a.getGameMode() == GameMode.SPECTATOR)
-            b.hidePlayer(plugin, a);
-        else
-            b.showPlayer(plugin, a);
-        if (b.getGameMode() == GameMode.SPECTATOR)
-            a.hidePlayer(plugin, b);
-        else
-            a.showPlayer(plugin, b);
+        if (hidePlayer(a)) b.hidePlayer(plugin, a);
+        else b.showPlayer(plugin, a);
+        if (hidePlayer(b)) a.hidePlayer(plugin, b);
+        else a.showPlayer(plugin, b);
+    }
+
+    public boolean hidePlayer(HumanEntity player) {
+        return player.getGameMode() == GameMode.SPECTATOR || player.hasPermission("simpletweaks.hide");
     }
 }

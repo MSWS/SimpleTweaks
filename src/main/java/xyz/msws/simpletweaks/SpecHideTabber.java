@@ -9,7 +9,6 @@ import com.comphenix.protocol.events.PacketListener;
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.comphenix.protocol.wrappers.WrappedServerPing;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -19,9 +18,11 @@ import java.util.List;
 
 public class SpecHideTabber implements PacketListener {
     private final Plugin plugin;
+    private final PlayerHider hider;
 
-    public SpecHideTabber(Plugin plugin) {
+    public SpecHideTabber(Plugin plugin, PlayerHider hider) {
         this.plugin = plugin;
+        this.hider = hider;
         ProtocolLibrary.getProtocolManager().addPacketListener(this);
     }
 
@@ -38,7 +39,7 @@ public class SpecHideTabber implements PacketListener {
             Player player = Bukkit.getPlayer(profile.getUUID());
             if (player == null)
                 continue;
-            if (player.getGameMode() == GameMode.SPECTATOR)
+            if (hider.hidePlayer(player))
                 iterator.remove();
         }
         status.setPlayers(players);

@@ -7,6 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class SimpleTweaks extends JavaPlugin {
 
     public static final String PREFIX = ChatColor.BLUE + "SimpleTweaks " + ChatColor.AQUA + "> " + ChatColor.GRAY;
+    private PlayerHider hider;
 
     @Override
     public void onEnable() {
@@ -15,7 +16,7 @@ public class SimpleTweaks extends JavaPlugin {
         registerCommands();
 
         if (Bukkit.getPluginManager().isPluginEnabled("ProtocolLib"))
-            new SpecHideTabber(this);
+            new SpecHideTabber(this, hider);
     }
 
     private void registerEvents() {
@@ -26,6 +27,8 @@ public class SimpleTweaks extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(chatListener, this);
         Bukkit.getPluginManager().registerEvents(deathListener, this);
         Bukkit.getPluginManager().registerEvents(specHideListener, this);
+
+        this.hider = specHideListener;
     }
 
     private void registerCommands() {
